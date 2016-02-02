@@ -1,14 +1,23 @@
 package com.kylelmoy.WormSeg;
 
+import java.awt.Color;
+import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
 import javax.imageio.ImageIO;
 
-public class WormSeg implements Runnable {
+/**
+ * Prepares and processes video frames for worm location and body area
+ * 
+ * @author Kyle Moy
+ *
+ */
+public class FeatureExtractor implements Runnable {
 	public final static int OUTPUT_COLUMNS = 3;//x, y, area
 	
 	private final int FRAME_WIDTH;
@@ -22,7 +31,7 @@ public class WormSeg implements Runnable {
 	private final InputStream[] INPUT;
 	private double[][] OUTPUT;
 	
-	public WormSeg(List<InputStream> images, double[] params) {
+	public FeatureExtractor(List<InputStream> images, double[] params) {
 		INPUT = new InputStream[images.size()];
 		images.toArray(INPUT);
 		OUTPUT = new double[INPUT.length][OUTPUT_COLUMNS];
@@ -38,7 +47,7 @@ public class WormSeg implements Runnable {
 	public double[][] getResult() {
 		return OUTPUT;
 	}
-	/*
+	
 	public static void drawThreshold(boolean[][] image, int x, int y, int frame) throws IOException {
         int w = image.length;
         int h = image[0].length;
@@ -75,7 +84,7 @@ public class WormSeg implements Runnable {
 		draw.flush();
 		ImageIO.write(draw, "png", new File("A:/" + String.format("%07d", frame) + ".png"));
 	}
-	*/
+	
 	public void run() {
 		//System.out.println("Running!");
 		int segmentationErrorCount = 0;

@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
  * @author Kyle Moy
  *
  */
-public class Main {
+public class Networking {
 	private static HashMap<String, String> config;
 	private static double[] SEG_CONFIG = new double[] {640,	//width
 													   480,	//height
@@ -258,7 +258,7 @@ public class Main {
 		}
 
 		//Compile results from nodes
-		int columns = WormSeg.OUTPUT_COLUMNS;
+		int columns = FeatureExtractor.OUTPUT_COLUMNS;
 		PrintWriter out;
 		try {
 			out = new PrintWriter(new File(output));
@@ -334,7 +334,7 @@ public class Main {
 				//System.out.println("Done sending files to " + s.getRemoteSocketAddress());
 				
 				//Get results
-				int columns = WormSeg.OUTPUT_COLUMNS;
+				int columns = FeatureExtractor.OUTPUT_COLUMNS;
 				OUTPUT = new double[size][columns];
 				for (int i = 0; i < size; i++) {
 					for (int j = 0; j < columns; j++) {
@@ -511,7 +511,7 @@ public class Main {
 							System.out.println("Beginning segmentation.");
 							int framesPerThread = (int)Math.ceil(size / (double)threads);
 							ExecutorService executor = Executors.newFixedThreadPool(threads);
-							WormSeg[] workerPool = new WormSeg[threads];
+							FeatureExtractor[] workerPool = new FeatureExtractor[threads];
 							int f = 0;
 							for (int i = 0; i < threads; i++) {
 								int fSize = framesPerThread;
@@ -519,7 +519,7 @@ public class Main {
 								List<InputStream> workload = input.subList(f, f + fSize);
 								//System.out.println("Thread " + i + " gets " + f + " to " + (f + fSize));
 								f += fSize;
-								workerPool[i] = new WormSeg(workload, SEG_CONFIG);
+								workerPool[i] = new FeatureExtractor(workload, SEG_CONFIG);
 								executor.submit(workerPool[i]);
 							}
 							executor.shutdown();
@@ -533,7 +533,7 @@ public class Main {
 							//Compile results from threads
 							//Also send to host! Efficiency wooo!
 							System.out.println("Sending results to host.");
-							int columns = WormSeg.OUTPUT_COLUMNS;
+							int columns = FeatureExtractor.OUTPUT_COLUMNS;
 							f = 0;
 							for (int i = 0; i < threads; i++) {
 								double[][] workerOutput = workerPool[i].getResult();
