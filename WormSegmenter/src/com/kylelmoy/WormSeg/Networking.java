@@ -1,3 +1,19 @@
+/*  Copyright (C) 2016 Kyle Moy
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package com.kylelmoy.WormSeg;
 
 import java.io.ByteArrayInputStream;
@@ -60,18 +76,50 @@ public class Networking {
 		config = new HashMap<String, String>();
 		System.out.println("Parameters specified:");
 		for (int i = 0; i < args.length; i+=2) {
-			config.put(args[i].replace("-", ""), args[i+1].toLowerCase());
+			String key = args[i].replace("-", "");
+			String value;
+			if (i + 1 > args.length) {
+				value = "";
+			} else if (args[i+1].contains("-")) {
+				value = "";
+				i--;
+			} else {
+				value = args[i+1].toLowerCase();
+			}
+			config.put(key, value);
 			System.out.println("\t" + args[i].replace("-", "") + ": " + args[i+1].toLowerCase());
 		}
-		if (config.get("mode").equals("host")) {
+		if (config.get("mode").equals("tasker")) {
 			host();
-		} else if (config.get("mode").equals("node")) {
+		} else if (config.get("mode").equals("worker")) {
 			node();
+		} else if (config.get("mode").equals("terminate")) {
+			terminate();
 		} else {
-			System.err.println("No mode specified! Include argument '-mode [host|node]'");
+			System.err.println("No mode specified! Include argument '-mode [tasker|worker|terminate]'");
 		}
 	}
-	
+
+	/**
+	 * Entry point for terminator
+	 */
+	private static void terminate() {
+		int serverPort;
+		if (config.get("port") == null) {
+			serverPort = 8190;
+		} else {
+			try {
+				serverPort = Integer.parseInt(config.get("port"));
+			} catch (NumberFormatException e) {
+				System.err.println("\tInvalid port.");
+				return;
+			}
+		}
+		System.out.println("Gathering nodes for termination.");
+		NodeHandler nodeHandler = new NodeHandler(serverPort);
+		nodeHandler.gatherNodes(1);
+		nodeHandler.terminate();
+	}
 	/**
 	 * Entry point for host 
 	 */
@@ -283,6 +331,11 @@ public class Networking {
 		
 	}
 
+	/**
+	 * Dress up milliseconds
+	 * @param time
+	 * @return
+	 */
 	private static String formatTime(long time) {
 		long second = (time / 1000) % 60;
 		long minute = (time / (1000 * 60)) % 60;
@@ -300,11 +353,19 @@ public class Networking {
 		private int end;
 		private int size;
 		private final Socket socket;
+		private DataOutputStream os;
+		private DataInputStream is;
 		
 		private double[][] OUTPUT;
 		
 		public Node(Socket s) {
-			this.socket = s;
+			socket = s;
+			try {
+				os = new DataOutputStream(socket.getOutputStream());
+				is = new DataInputStream(socket.getInputStream());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 		
 		public void initialize(int s, int e) {
@@ -317,13 +378,18 @@ public class Networking {
 			return OUTPUT;
 		}
 		
+		/**
+		 * Tell nodes to quit
+		 */
+		public void terminateRemote() {
+			try {
+				os.writeInt(-1);
+			} catch (IOException e) {}
+		}
+		
 		@Override
 		public void run() {
 			try {
-				//System.out.println("Sending " + size + " files to " + s.getRemoteSocketAddress());
-				DataOutputStream os = new DataOutputStream(socket.getOutputStream());
-				DataInputStream is = new DataInputStream(socket.getInputStream());
-				
 				//Send size
 				os.writeInt(size);
 				
@@ -392,7 +458,16 @@ public class Networking {
 		}
 		
 		/**
-		 * Begins listening for nodes, and waits until
+		 * Tells nodes to end process
+		 */
+		public void terminate() {
+			for (Node node : nodes) {
+				node.terminateRemote();
+			}
+		}
+		
+		/**
+		 * Begins listening for nodes, and waits until at LEAST numNodes nodes join
 		 * @param numNodes
 		 */
 		public void gatherNodes(int numNodes) {
@@ -400,6 +475,8 @@ public class Networking {
 			while (nodes.size() < numNodes) {
 				try{ Thread.sleep(1000); } catch (Exception e) {}
 			}
+			//Wait just a bit in case another node wants in on the fun
+			try{ Thread.sleep(1000); } catch (Exception e) {}
 			stop();
 		}
 		
@@ -492,27 +569,27 @@ public class Networking {
 	 * Entry point for node
 	 */
 	private static void node() {
-		String host;
-		int threads;
-		int port;
+		String hostAddress;
+		int numThreads;
+		int hostPort;
 		
 		//Read arguments
 		System.out.println("Node Parameters:");
 		if (config.get("host") == null) {
-			host = "localhost";
-			System.out.println("\thost:" + host + " (DEFAULT)");
+			hostAddress = "localhost";
+			System.out.println("\thost:" + hostAddress + " (DEFAULT)");
 		} else {
-			host = config.get("host");
-			System.out.println("\thost:" + host);
+			hostAddress = config.get("host");
+			System.out.println("\thost:" + hostAddress);
 		}
 		
 		if (config.get("port") == null) {
-			port = 8190;
-			System.out.println("\tport:" + port + " (DEFAULT)");
+			hostPort = 8190;
+			System.out.println("\tport:" + hostPort + " (DEFAULT)");
 		} else {
 			try {
-				port = Integer.parseInt(config.get("port"));
-				System.out.println("\tport:" + port);
+				hostPort = Integer.parseInt(config.get("port"));
+				System.out.println("\tport:" + hostPort);
 			} catch (Exception e) {
 				System.err.println("Invalid port.");
 				return;
@@ -520,12 +597,12 @@ public class Networking {
 		}
 		
 		if (config.get("threads") == null) {
-			threads = Runtime.getRuntime().availableProcessors();
-			System.out.println("\tthreads:" + threads + " (DEFAULT)");
+			numThreads = Runtime.getRuntime().availableProcessors();
+			System.out.println("\tthreads:" + numThreads + " (DEFAULT)");
 		} else {
 			try {
-				threads = Integer.parseInt(config.get("threads"));
-				System.out.println("\tthreads:" + threads);
+				numThreads = Integer.parseInt(config.get("threads"));
+				System.out.println("\tthreads:" + numThreads);
 			} catch (Exception e) {
 				System.err.println("Invalid thread count.");
 				return;
@@ -538,13 +615,13 @@ public class Networking {
 		DataOutputStream os;
 		
 		while (true) {
-			System.out.println("Attempting to connect to " + host + ".");
+			System.out.println("Attempting to connect to " + hostAddress + ".");
 			while (true) {
 				try {
-					socket = new Socket(host, port);
+					socket = new Socket(hostAddress, hostPort);
 					is = new DataInputStream(socket.getInputStream());
 					os = new DataOutputStream(socket.getOutputStream());
-					System.out.println("Connection to " + host + " made.");
+					System.out.println("Connection to " + hostAddress + " made.");
 					try {
 						while (true) {
 							System.out.println("Waiting for work.");
@@ -557,6 +634,9 @@ public class Networking {
 									//IT'S GO TIME WOOOO
 									System.out.println("Incoming data length: " + size);
 									break;
+								} else if (size < 0) {
+									//Time to die :c
+									return;
 								}
 							}
 							
@@ -582,15 +662,14 @@ public class Networking {
 							
 							//Make worker threads
 							System.out.println("Beginning segmentation.");
-							int framesPerThread = (int)Math.ceil(size / (double)threads);
-							ExecutorService executor = Executors.newFixedThreadPool(threads);
-							FeatureExtractor[] workerPool = new FeatureExtractor[threads];
+							int framesPerThread = (int)Math.ceil(size / (double)numThreads);
+							ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+							FeatureExtractor[] workerPool = new FeatureExtractor[numThreads];
 							int f = 0;
-							for (int i = 0; i < threads; i++) {
+							for (int i = 0; i < numThreads; i++) {
 								int fSize = framesPerThread;
 								if (f + fSize > size) fSize -= f + fSize - size;
 								List<InputStream> workload = input.subList(f, f + fSize);
-								//System.out.println("Thread " + i + " gets " + f + " to " + (f + fSize));
 								f += fSize;
 								workerPool[i] = new FeatureExtractor(workload, SEG_CONFIG);
 								executor.submit(workerPool[i]);
@@ -608,7 +687,7 @@ public class Networking {
 							System.out.println("Sending results to host.");
 							int columns = FeatureExtractor.OUTPUT_COLUMNS;
 							f = 0;
-							for (int i = 0; i < threads; i++) {
+							for (int i = 0; i < numThreads; i++) {
 								double[][] workerOutput = workerPool[i].getResult();
 								for (int j = 0; j < workerOutput.length; j++) {
 									for (int k = 0; k < columns; k++) {
@@ -620,7 +699,7 @@ public class Networking {
 							//Done
 						}
 					} catch (IOException e) {
-						System.out.println("Connection to " + host + " lost.");
+						System.out.println("Connection to " + hostAddress + " lost.");
 						socket.close();
 					}
 				} catch (UnknownHostException e) {
