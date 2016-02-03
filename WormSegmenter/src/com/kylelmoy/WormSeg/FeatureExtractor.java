@@ -48,7 +48,15 @@ public class FeatureExtractor implements Runnable {
 		return OUTPUT;
 	}
 	
-	public static void drawThreshold(boolean[][] image, int x, int y, int frame) throws IOException {
+	/**
+	 * Writes boolean masks as images for debugging purposes
+	 * @param image
+	 * @param x
+	 * @param y
+	 * @param frame
+	 * @throws IOException
+	 */
+	private static void drawThreshold(boolean[][] image, int x, int y, int frame) throws IOException {
         int w = image.length;
         int h = image[0].length;
 		BufferedImage draw = new BufferedImage(640, 480, BufferedImage.TYPE_INT_RGB);
@@ -63,10 +71,18 @@ public class FeatureExtractor implements Runnable {
 		}
 		g.dispose();
 		draw.flush();
-		ImageIO.write(draw, "png", new File("R://" + String.format("%07d", frame) + ".png"));
+		ImageIO.write(draw, "png", new File(String.format("%07d", frame) + ".png"));
 	}
 
-	public static void drawGrayscale(int[] image, int w, int h, int frame) throws IOException {
+	/**
+	 * Writes grayscale images to file for debugging purposes
+	 * @param image
+	 * @param w
+	 * @param h
+	 * @param frame
+	 * @throws IOException
+	 */
+	private static void drawGrayscale(int[] image, int w, int h, int frame) throws IOException {
 		BufferedImage draw = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
 		Graphics g = draw.getGraphics();
 		g.setColor(new Color(0));
@@ -82,7 +98,7 @@ public class FeatureExtractor implements Runnable {
 		}
 		g.dispose();
 		draw.flush();
-		ImageIO.write(draw, "png", new File("A:/" + String.format("%07d", frame) + ".png"));
+		ImageIO.write(draw, "png", new File(String.format("%07d", frame) + ".png"));
 	}
 	
 	public void run() {
@@ -94,21 +110,23 @@ public class FeatureExtractor implements Runnable {
 		int offx, offy;
 		double[] centroid;
 		
-		boolean[][] thresh;
+		BufferedImage img;
 		int[] grayscale;
+		boolean[][] thresh;
 		
 		int index = 0;
 		while (true) {
 			if (index >= INPUT.length) break;
-			BufferedImage img;
 			try {
 				img = ImageIO.read(INPUT[index]);
 			} catch (IOException e) {
 				break;
 			}
 			
-			//Apply blur to the image
+			//Convert to grayscale, as primitive array
 			grayscale = grayscale(img);
+			
+			//Apply blur to the image
 			grayscale = quickBlur(grayscale, FRAME_WIDTH, FRAME_HEIGHT, BLUR_RADIUS);
 			//try {drawGrayscale(grayscale,FRAME_WIDTH, FRAME_HEIGHT,index);} catch (IOException e) {}
 			
@@ -149,7 +167,7 @@ public class FeatureExtractor implements Runnable {
 				OUTPUT[index][0] = centroid[0];
 				OUTPUT[index][1] = centroid[1];
 				OUTPUT[index][2] = area;
-			} catch (Exception e) {
+			} catch (SegmentationFailureException e) {
 				lastx = null;
 				
 				//Narrow search area to the center area if too many failures
@@ -181,7 +199,7 @@ public class FeatureExtractor implements Runnable {
 	 */
 
 	int[] dv;
-	public int[] quickBlur(int[] image, int w, int h, int radius) {
+	private int[] quickBlur(int[] image, int w, int h, int radius) {
 		if (radius < 1) {
 			return image;
 		}
@@ -285,11 +303,13 @@ public class FeatureExtractor implements Runnable {
 	 * @param image
 	 * @return
 	 */
-	public int calcArea(boolean[][] image) {
+	private int calcArea(boolean[][] image) {
 		int c = 0;
-		for (boolean[] a : image)
-			for (boolean b : a)
+		for (boolean[] a : image) {
+			for (boolean b : a) {
 				if (b) c++;
+			}
+		}
 		return c;
 	}
 
@@ -370,7 +390,7 @@ public class FeatureExtractor implements Runnable {
 	 * @param winsize
 	 * @return
 	 */
-	double average(int[][] integral, int x, int y, int w, int h, int winsize) {
+	private double average(int[][] integral, int x, int y, int w, int h, int winsize) {
 		winsize /= 2;
 		int x1 = x - 1 - winsize;
 		int y1 = y - 1 - winsize;
@@ -384,19 +404,22 @@ public class FeatureExtractor implements Runnable {
 			y2 = h - 1;
 
 		// Min Bounds
-		int a, b, c, d;
-		if (x1 < 0 || y1 < 0)
+		final int a, b, c, d;
+		if (x1 < 0 || y1 < 0) {
 			a = 0;
-		else
+		} else {
 			a = integral[x1][y1];
-		if (y1 < 0)
+		}
+		if (y1 < 0) {
 			b = 0;
-		else
+		} else {
 			b = integral[x2][y1];
-		if (x1 < 0)
+		}
+		if (x1 < 0) {
 			c = 0;
-		else
+		} else {
 			c = integral[x1][y2];
+		}
 		d = integral[x2][y2];
 		return (d - c - b + a) / (double) ((x2 - x1) * (y2 - y1));
 	}
@@ -408,7 +431,7 @@ public class FeatureExtractor implements Runnable {
 	 * @param j Subscript
 	 * @return The element
 	 */
-	int sub(int[][] pix, int i, int j) {
+	private int sub(int[][] pix, int i, int j) {
 		if (i < 0)
 			return 0;
 		if (j < 0)
@@ -423,14 +446,12 @@ public class FeatureExtractor implements Runnable {
 	 * @param j Subscript
 	 * @return The element
 	 */
-	int sub(int[] arr, int i, int j, int w) {
+	private int sub(int[] arr, int i, int j, int w) {
 		if (i < 0)
 			return 0;
 		if (j < 0)
 			return 0;
 		int val = arr[i + (j * w)];
-		//if (val < 0)
-		//	val += 255;
 		return val;
 	}
 	
@@ -438,8 +459,7 @@ public class FeatureExtractor implements Runnable {
 	 * Counts the number of connected components in a boolean mask using
 	 * UnionFind
 	 * 
-	 * @param image
-	 *            The boolean mask
+	 * @param image The boolean mask
 	 * @return The number of connected components
 	 * @throws ComponentLabellingFailureException 
 	 */
@@ -489,6 +509,7 @@ public class FeatureExtractor implements Runnable {
 		private final int h;
 		private final int min;
 		private final int max;
+		
 		public ConnectedComponentAnalysis(boolean[][] image, int areaMin, int areaMax) throws SegmentationFailureException {
 			min = areaMin;
 			max = areaMax;

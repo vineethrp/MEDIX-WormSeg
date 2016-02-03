@@ -292,6 +292,11 @@ public class Networking {
 			);
 		System.out.println("Task complete. Task Time: " + elapsed);
 	}
+	
+	/**
+	 * Handles networking with Nodes
+	 *
+	 */
 	private static class NodeHandler implements Runnable {
 		private final int start;
 		private final int end;
@@ -348,6 +353,11 @@ public class Networking {
 			}
 		}
 	}
+	
+	/**
+	 * Listens for incomming Node connections
+	 *
+	 */
 	private static class Listener implements Runnable{
 		private final int port;
 		private ArrayList<Socket> nodes;
