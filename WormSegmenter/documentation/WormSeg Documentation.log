@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (MiKTeX 2.9) (preloaded format=pdflatex 2016.1.31)  2 FEB 2016 02:13
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (MiKTeX 2.9) (preloaded format=pdflatex 2016.1.31)  3 FEB 2016 01:07
 entering extended mode
 **"./WormSeg Documentation.tex"
 ("WormSeg Documentation.tex"
@@ -87,35 +87,53 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 
 {C:/Users/Administrator/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map}] [2]
  [3]
-Overfull \hbox (39.0039pt too wide) in paragraph at lines 93--94
-[][][][][][][][][][][][][][][][][][][][][][][][][][][][] 
- []
+("C:\Users\Administrator\AppData\Local\Programs\MiKTeX 2.9\tex\latex\listings\l
+stlang1.sty"
+File: lstlang1.sty 2015/06/04 1.6 listings language file
+)
+("C:\Users\Administrator\AppData\Local\Programs\MiKTeX 2.9\tex\latex\listings\l
+stlang2.sty"
+File: lstlang2.sty 2015/06/04 1.6 listings language file
+)
+("C:\Users\Administrator\AppData\Local\Programs\MiKTeX 2.9\tex\latex\listings\l
+stlang3.sty"
+File: lstlang3.sty 2015/06/04 1.6 listings language file
+) [4] [5]
+LaTeX Font Info:    Try loading font information for OMS+cmr on input line 143.
 
-[4] ("WormSeg Documentation.aux") ) 
+
+("C:\Users\Administrator\AppData\Local\Programs\MiKTeX 2.9\tex\latex\base\omscm
+r.fd"
+File: omscmr.fd 2014/09/29 v2.5h Standard LaTeX font definitions
+)
+LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10> not available
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 143.
+ [6] ("WormSeg Documentation.aux") ) 
 Here is how much of TeX's memory you used:
- 1451 strings out of 493634
- 20903 string characters out of 3131975
- 77156 words of memory out of 3000000
- 4894 multiletter control sequences out of 15000+200000
+ 1710 strings out of 493634
+ 24721 string characters out of 3131975
+ 138714 words of memory out of 3000000
+ 5140 multiletter control sequences out of 15000+200000
  7895 words of font info for 28 fonts, out of 3000000 for 9000
  1025 hyphenation exceptions out of 8191
- 26i,8n,32p,924b,843s stack positions out of 5000i,500n,10000p,200000b,50000s
-<C:/Users/Administrator/AppData/Local/Progra
-ms/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmbx10.pfb><C:/Users/Administrator
-/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C
-:/Users/Administrator/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsf
-onts/cm/cmmi10.pfb><C:/Users/Administrator/AppData/Local/Programs/MiKTeX 2.9/fo
-nts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/Administrator/AppData/Local/Pr
-ograms/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/Administra
-tor/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr17.pfb>
-<C:/Users/Administrator/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/am
-sfonts/cm/cmr6.pfb><C:/Users/Administrator/AppData/Local/Programs/MiKTeX 2.9/fo
-nts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/Administrator/AppData/Local/Pro
-grams/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/Administrato
-r/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsy10.pfb>
-Output written on "WormSeg Documentation.pdf" (4 pages, 136854 bytes).
+ 26i,8n,42p,924b,1479s stack positions out of 5000i,500n,10000p,200000b,50000s
+<C:/Users/Administrator/AppData/Local/Progr
+ams/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmbx10.pfb><C:/Users/Administrato
+r/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmbx12.pfb><
+C:/Users/Administrator/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/ams
+fonts/cm/cmmi10.pfb><C:/Users/Administrator/AppData/Local/Programs/MiKTeX 2.9/f
+onts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/Administrator/AppData/Local/P
+rograms/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/Administr
+ator/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr17.pfb
+><C:/Users/Administrator/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/a
+msfonts/cm/cmr6.pfb><C:/Users/Administrator/AppData/Local/Programs/MiKTeX 2.9/f
+onts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/Administrator/AppData/Local/Pr
+ograms/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/Administrat
+or/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsy10.pfb>
+
+Output written on "WormSeg Documentation.pdf" (6 pages, 144329 bytes).
 PDF statistics:
- 55 PDF objects out of 1000 (max. 8388607)
+ 61 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 

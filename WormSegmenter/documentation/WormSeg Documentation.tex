@@ -19,19 +19,20 @@ Finally, since I was rewriting from scratch, I had the opportunity to make major
 
 \section{Instructions}
 \begin{enumerate}
-	\item Configure a launch script for both the host and node. Refer to the Launch Arguments section.
-	\item Launch the host and any number of nodes, in any order. Host will begin when enough nodes have joined. (See host argument "-nodes")
-	\item Wait for the task to complete. Host will output the results and then terminate.
-	\item Nodes will NOT terminate on their own. This allows multiple tasks to be run by launching hosts repeatedly (but not concurrently).
+	\item On any number of machines, launch one instance of WormSeg in \textbf{worker} mode.
+	\item On the specified host machine, launch instances of WormSeg in \textbf{tasker} mode.
+	\item Taskers (hosts) will immediately begin tasking nodes. Once processing is complete, it will terminate.
+	\item Nodes will not terminate. This allows launching multiple taskers with different parameters (not concurrently) to process multiple videos.
+	\item To terminate all nodes, launch WormSeg in \textbf{terminate} mode.
 \end{enumerate}
 
 \section{Launch Arguments}
 Bracketed arguments have default values and thus are optional. Strings and numbers are entered literally and should not be enclosed in quotes.
-\subsection{Host Arguments}
+\subsection{Tasker Arguments}
 \subsubsection{Operational Arguments}
 \begin{description}
-	\item[-mode (host / node)] \hfill \\
-	This must be specified with "\textbf{node}" to start the program in host mode.
+	\item[-mode (tasker / worker / terminate)] \hfill \\
+	This must be specified with "\textbf{tasker}" to start the program in tasker (host) mode.
 	\item[-project (name)] \hfill \\
 	The name of the project to process. This argument, along with "-dir", will be used to detect the input and output paths. This argument \textbf{must} be specified if "-input" and "-output" are not.
 	\item[{[-dir (path)]}] \hfill \\
@@ -45,7 +46,7 @@ Bracketed arguments have default values and thus are optional. Strings and numbe
 	\item[{[-threads (number)]}] \hfill \\
 	The number of threads to use for network traffic parallelization. \textbf{Default: Number of CPU cores}
 	\item[{[-nodes (number)]}] \hfill \\
-	The minimum number of nodes that must be joined before beginning the task. The task will automatically begin once this many nodes have connected. \textbf{Default: 1}
+	The \textbf{minimum} number of workers(nodes) that must be joined before beginning the task. The task will automatically begin once this many nodes have connected. Any available node will be added, even if in excess of this number. \textbf{Default: 1}
 	\item[{[-extension (string)]}] \hfill \\
 	The extension on the image files. \textbf{Default: ".jpg"}
 	\item[{[-padding (number)]}] \hfill \\
@@ -75,21 +76,70 @@ These are all optional, however may need to be configured if segmentation is not
 	The percentage (as a decimal) which a pixel's intensity as a quotient of its neighborhood average must be less than to be considered to be possibly on the worm body. e.g. If this value is 0.9, and the neighborhood average intensity is 255 (pure white), then a pixel's intensity must be below \(0.9 * 255 \approx 229\) in order to be a potential worm body pixel.  \textbf{Default: 0.9}
 	
 \end{description}
-\subsection{Node Arguments}
+\subsection{Worker Arguments}
 \begin{description}
-	\item[-mode (host / node)] \hfill \\
-	This must be specified with "\textbf{node}" to start the program in node mode.
+	\item[-mode (tasker / worker / terminate)] \hfill \\
+	This must be specified with "\textbf{worker}" to start the program in worker mode.
 	\item[{[-host (address)]}] \hfill \\
-	The address of the host process. \textbf{Default: "localhost"}
+	The address of the machine running (or will run) the tasker (host) process. \textbf{Default: "localhost"}
 	\item[{[-port (number)]}] \hfill \\
 	The port to connect to. \textbf{Default: 8190}
 	\item[{[-threads (number)]}] \hfill \\
 	The number of threads to use for computing. \textbf{Default: Number of CPU cores}
 \end{description}
 
-\subsection{JVM Considerations}
-The JVM heap size is by default 1/4th of your total physical memory. Depending on the input data, a larger heap size may be necessary. You can specify the heap size with the flag \textbf{-Xmx\#g}, where \# is some number of gibibytes. For example, your host launch script might read:
-\begin{lstlisting}
-java -Xmx16g -jar WormSeg.jar -mode host -nodes 8 -project n2_f1
+\section{Example Scripts}
+\subsection{Worker Scripts}
+If you will be tasking from the same machine as the worker, you don't need any additional arguments after specifying worker mode. When not specified, "-host localhost" is implicit. If you will be launching more workers on other machines, it is simpler to explicitly specify the tasker(host) machine IP.
+\begin{lstlisting}[language=command.com, breaklines=true, caption=Local Machine Worker]
+java -jar WormSeg.jar -mode worker
+\end{lstlisting}
+
+Most likely, you will need to specify where your tasker process is running. This will almost always be the machine where the data is stored.
+
+\begin{lstlisting}[language=command.com, breaklines=true, caption=Host specified]
+java -jar WormSeg.jar -mode worker -host medixsrv.cstcis.cti.depaul.edu
+\end{lstlisting}
+
+If you would like to use a specific number of threads, you can do so with the "-threads" argument. By default, the program will autodetect the number of logical cores available, and usually this is the most efficient number.
+
+\begin{lstlisting}[language=command.com, breaklines=true, caption=Threads specified]
+java -jar WormSeg.jar -mode worker -threads 8
+\end{lstlisting}
+
+\subsection{Tasker Scripts}
+The fewest arguments for taskers is to specify the mode and the project. The default values for data location and output location is based on the assumption that this will be run from MEDIXSRV.
+\begin{lstlisting}[language=command.com, breaklines=true, caption=Project Names]
+java -jar WormSeg.jar -mode tasker -project N2_f1
+\end{lstlisting}
+
+If the tasker is not being run from MEDIXSRV, but the data directory structure is similar, you can specify where the root of the project directory is with "-dir".
+\begin{lstlisting}[language=command.com, breaklines=true, caption=Project + Directory]
+java -jar WormSeg.jar -mode tasker -project N2_f1 -dir D:/nematodes/data/
+\end{lstlisting}
+
+If the data is not stored somewhere with the expected directory structure, you can explicitly specify the location of your video image frames with "-input", and the file path to write the output to with "-output".
+\begin{lstlisting}[language=command.com, breaklines=true, caption=Arbitrary Locations]
+java -jar WormSeg.jar -mode tasker -input D:/data/ -output D:/output.txt
+\end{lstlisting}
+
+You can also tune the segmentation parameters. I won't list them all; refer to arguments section. These are all implicit with default parameters.
+\begin{lstlisting}[language=command.com, breaklines=true, caption=Segmentation Parameters]
+java -jar WormSeg.jar -mode tasker -width 640 -height 480 -area_min 200 -area_max 400 -threshold_ratio 0.9
+\end{lstlisting}
+
+Finally, more often then not, you will need to process many videos at a time. In batch scripts, this can simply be done with multiple launches in tasker mode. All of these will launch independently, and need to have their parameters set each time. You might even want to (in the case that it is necessary) set different segmentation parameters per video.
+
+\begin{lstlisting}[language=command.com, breaklines=true, caption=Mulitple Launch]
+java -jar WormSeg.jar -mode tasker -project N2_f1
+java -jar WormSeg.jar -mode tasker -project tph1_f2
+java -jar WormSeg.jar -mode tasker -project egl19_f3
+\end{lstlisting}
+
+
+\subsection{Java VM Considerations}
+The JVM heap size is by default 1/4th of your total physical memory. Depending on the input data, a larger heap size may be necessary. You can specify the heap size with the flag \textbf{-Xmx\#g}, where \# is some number of gibibytes.
+\begin{lstlisting}[language=command.com, breaklines=true, caption=Local Machine Worker]
+java -Xmx16g -jar WormSeg.jar -mode [tasker|worker]
 \end{lstlisting}
 \end{document}          
