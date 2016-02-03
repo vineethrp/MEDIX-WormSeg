@@ -13,7 +13,10 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -50,8 +53,9 @@ public class Networking {
 			return;
 		}
 		
-		System.out.println("Welcome to WormSeg 2.0");
-		System.out.println("Java Virtual Machine Heap Size: " + Runtime.getRuntime().maxMemory() / (1024 * 1024) + "MB");
+		System.out.println("Welcome to WormSeg");
+		System.out.println("Current Date: " + (new SimpleDateFormat("MM/dd/yyyy HH:mm:ss")).format(new Date()));
+		System.out.println("JVM Heap Size: " + Runtime.getRuntime().maxMemory() / (1024 * 1024) + "MB");
 		
 		config = new HashMap<String, String>();
 		System.out.println("Parameters specified:");
@@ -73,15 +77,15 @@ public class Networking {
 	 */
 	private static byte[][] file;
 	private static void host() {
-		String input = null;
-		String output = null;
-		String extension;
+		String inputPath = null;
+		String outputPath = null;
+		String fileExtension;
 		
 		int padding;
-		int port;
-		int frames;
-		int threads;
-		int startNodes;
+		int serverPort;
+		int numFrames;
+		int numThreads;
+		int numNodes;
 		
 		//Read arguments
 		if (config.get("project") != null) {
@@ -93,39 +97,39 @@ public class Networking {
 				dir = config.get("dir");
 			}
 			
-			input = dir + project + "/input/";
-			output = dir + project + "/log/feature.log";
+			inputPath = dir + project + "/input/";
+			outputPath = dir + project + "/log/feature.log";
 		}
 		if (config.get("input") == null) {
-			if (input == null) {
+			if (inputPath == null) {
 				System.err.println("\tNo input directory specified! Include arugment '-input [directory path]");
 				return;
 			}
 		} else {
-			input = config.get("input");
-			if (!(new File(input)).isDirectory()) {
-				System.err.println("\t\"" + input + "\" is not a directory!");
+			inputPath = config.get("input");
+			if (!(new File(inputPath)).isDirectory()) {
+				System.err.println("\t\"" + inputPath + "\" is not a directory!");
 				return;
 			}
 		}
 		
 		if (config.get("output") == null) {
-			if (output == null) {
+			if (outputPath == null) {
 				System.err.println("\tNo output file specified! Include arugment '-output [file path]");
 				return;
 			}
 		} else {
-			output = config.get("output");
-			if ((new File(output)).exists()) {
-				System.err.println("\tWARNING: \"" + input + "\" already exists! This file will be overwritten.");
+			outputPath = config.get("output");
+			if ((new File(outputPath)).exists()) {
+				System.out.println("\tWARNING: \"" + outputPath + "\" already exists! This file will be overwritten.");
 			}
 		}
 		if (config.get("port") == null) {
-			port = 8190;
-			System.out.println("\tport: " + port + " (DEFAULT)");
+			serverPort = 8190;
+			System.out.println("\tport: " + serverPort + " (DEFAULT)");
 		} else {
 			try {
-				port = Integer.parseInt(config.get("port"));
+				serverPort = Integer.parseInt(config.get("port"));
 			} catch (NumberFormatException e) {
 				System.err.println("\tInvalid port.");
 				return;
@@ -133,12 +137,12 @@ public class Networking {
 		}
 
 		if (config.get("threads") == null) {
-			threads = Runtime.getRuntime().availableProcessors();
-			System.out.println("\tthreads:" + threads + " (DEFAULT)");
+			numThreads = Runtime.getRuntime().availableProcessors();
+			System.out.println("\tthreads:" + numThreads + " (DEFAULT)");
 		} else {
 			try {
-				threads = Integer.parseInt(config.get("threads"));
-				System.out.println("\tthreads:" + threads);
+				numThreads = Integer.parseInt(config.get("threads"));
+				System.out.println("\tthreads:" + numThreads);
 			} catch (Exception e) {
 				System.err.println("Invalid thread count.");
 				return;
@@ -146,12 +150,12 @@ public class Networking {
 		}
 
 		if (config.get("nodes") == null) {
-			startNodes = 1;
-			System.out.println("\tnodes:" + startNodes + " (DEFAULT)");
+			numNodes = 1;
+			System.out.println("\tnodes:" + numNodes + " (DEFAULT)");
 		} else {
 			try {
-				startNodes = Integer.parseInt(config.get("nodes"));
-				System.out.println("\tnodes:" + startNodes);
+				numNodes = Integer.parseInt(config.get("nodes"));
+				System.out.println("\tnodes:" + numNodes);
 			} catch (Exception e) {
 				System.err.println("Invalid nodes count.");
 				return;
@@ -159,11 +163,11 @@ public class Networking {
 		}
 
 		if (config.get("extension") != null) {
-			extension = config.get("extension");
-			System.out.println("\textension: " + extension);
+			fileExtension = config.get("extension");
+			System.out.println("\textension: " + fileExtension);
 		} else {
-			extension = ".jpg";
-			System.out.println("\textension: " + extension + " (DEFAULT)");
+			fileExtension = ".jpg";
+			System.out.println("\textension: " + fileExtension + " (DEFAULT)");
 		}
 		
 		if (config.get("padding") != null) {
@@ -175,19 +179,19 @@ public class Networking {
 		}
 		
 		if (config.get("frames") != null) {
-			frames = Integer.parseInt(config.get("frames"));
-			if (!(new File(input + String.format("%0" + padding + "d", frames-1) + extension).exists())) {
+			numFrames = Integer.parseInt(config.get("frames"));
+			if (!(new File(inputPath + String.format("%0" + padding + "d", numFrames-1) + fileExtension).exists())) {
 				System.err.println("No file found at \"" +
-				(input + String.format("%0" + padding + "d", frames-1) + extension) +
+				(inputPath + String.format("%0" + padding + "d", numFrames-1) + fileExtension) +
 				"\". Either frames exceeds file count, or input path is incorrect!");
 			}
-			System.out.println("\tframes: " + frames);
+			System.out.println("\tframes: " + numFrames);
 		} else {
-			frames = (new File(input)).list().length;
-			while (!(new File(input + String.format("%0" + padding + "d", frames-1) + extension).exists())) {
-				frames--;
+			numFrames = (new File(inputPath)).list().length;
+			while (!(new File(inputPath + String.format("%0" + padding + "d", numFrames-1) + fileExtension).exists())) {
+				numFrames--;
 			}
-			System.out.println("\tframes: " + frames + " (DEFAULT ALL)");
+			System.out.println("\tframes: " + numFrames + " (DEFAULT ALL)");
 		}
 		
 		System.out.println("Segmentation Parameters:");
@@ -204,76 +208,67 @@ public class Networking {
 			}
 		}
 		
-		//Start listening for nodes
-		Listener listener = new Listener(port);
-		Thread listenerThread = new Thread(listener);
-		listenerThread.start();
+		//For benchmarking
+		long time = System.currentTimeMillis();
+		long epoch = System.currentTimeMillis();
 		
-		//Preload data in the meantime
-		System.out.println("Preloading data.");
-		file = new byte[frames][];
+		//Preload data
+		System.out.print("Loading input data... ");
+		file = new byte[numFrames][];
 		try{
-			for (int i = 0; i < frames; i++) {
-				file[i] = Files.readAllBytes(Paths.get(input + String.format("%0" + padding + "d", i) + extension));
+			for (int i = 0; i < numFrames; i++) {
+				file[i] = Files.readAllBytes(Paths.get(inputPath + String.format("%0" + padding + "d", i) + fileExtension));
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		System.out.println("Preloading complete.");
-		if (listener.getNodes().size() < startNodes) {
-			System.out.println("Waiting for " + startNodes + " nodes to finish joining.");
-			while (listener.getNodes().size() < startNodes) {
-				try{ Thread.sleep(1000); } catch (Exception e) {}
-			}
-		}
+		System.out.println("Complete. +(" + formatTime(System.currentTimeMillis() - time) + ")");
+		time = System.currentTimeMillis();
 		
-		//Stop listening for nodes
-		try {
-			listener.stop();
-			listenerThread.join();
-		} catch (InterruptedException e1) {}
+		System.out.println("Gathering " + numNodes + " nodes... ");
+		//Start listening for nodes
+		NodeHandler nodeHandler = new NodeHandler(serverPort);
+		nodeHandler.gatherNodes(numNodes);
+		System.out.println("Complete. +(" + formatTime(System.currentTimeMillis() - time) + ")");
+		time = System.currentTimeMillis();
 		
-		ArrayList<Socket> nodes = listener.getNodes();
+		System.out.print("Processing... ");
+		//Distribute workload evenly across all nodes
+		nodeHandler.assignTask(numFrames);
+		
+		//Send input, receive output
+		nodeHandler.startTask(numThreads, true);
 
-		System.out.println("Beginning task.");
-		long time = System.currentTimeMillis();
-		int framesPerNode = (int)Math.ceil(frames / (double)nodes.size());
-		int f = 0;
-		ExecutorService executor = Executors.newFixedThreadPool(threads);
-		NodeHandler[] nodeHandlers = new NodeHandler[nodes.size()];
-		for (int i = 0; i < nodes.size(); i++ ) {
-			int size = framesPerNode;
-			if (f + size > frames) size -= (f + size - frames);
-			int start = f;
-			int end = f + size;
-			f += size;
-			nodeHandlers[i] = new NodeHandler(nodes.get(i), start, end);
-			executor.execute(nodeHandlers[i]);
-		}
-		executor.shutdown();
+		System.out.println("Complete. +(" + formatTime(System.currentTimeMillis() - time) + ")");
+		time = System.currentTimeMillis();
+		//Write results to disk
 		
-		// Wait until all threads are finish
-		while (!executor.isTerminated()) {
-			try{ Thread.sleep(1000); } catch (Exception e) {}
-		}
-
+		
+		System.out.print("Writing results to " + outputPath + "... ");
 		//Compile results from nodes
 		int columns = FeatureExtractor.OUTPUT_COLUMNS;
 		PrintWriter out;
 		try {
-			out = new PrintWriter(new File(output));
+			out = new PrintWriter(new File(outputPath));
 		} catch (FileNotFoundException e) {
 			//How tragic...
-			e.printStackTrace();
-			return;
+			try {
+				String fName = "RESULT_DUMP" + System.currentTimeMillis() + ".log";
+				out = new PrintWriter(new File(fName));
+				e.printStackTrace();
+				System.err.println("File error occured. Dumping results to " + fName + ".");
+			} catch (FileNotFoundException e1) {
+				//How really, really tragic.
+				e1.printStackTrace();
+				return;
+			}
 		}
-		System.out.println("Segmentation complete.");
-		//Write results to disk
-		System.out.println("Writing results to " + output);
+		
+		List<Node> nodes = nodeHandler.getNodes();
 		int l = 0;
 		String line;
-		for (int i = 0; i < nodeHandlers.length; i++) {
-			double[][] workerOutput = nodeHandlers[i].getResult();
+		for (Node node : nodes) {
+			double[][] workerOutput = node.getResult();
 			for (int j = 0; j < workerOutput.length; j++) {
 				line = "" + l++;
 				for (int k = 0; k < columns; k++) {
@@ -284,30 +279,37 @@ public class Networking {
 		}
 		out.close();
 
-		long millis = System.currentTimeMillis() - time;
-		String elapsed = String.format("%02d min, %02d sec", 
-			    TimeUnit.MILLISECONDS.toMinutes(millis),
-			    TimeUnit.MILLISECONDS.toSeconds(millis) - 
-			    TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis))
-			);
-		System.out.println("Task complete. Task Time: " + elapsed);
+		System.out.println("Complete. Total elapsed time [" + formatTime(System.currentTimeMillis() - epoch) + "]");
+		
+	}
+
+	private static String formatTime(long time) {
+		long second = (time / 1000) % 60;
+		long minute = (time / (1000 * 60)) % 60;
+		long hour = (time / (1000 * 60 * 60)) % 24;
+
+		return String.format("%02d:%02d:%02d:%03d", hour, minute, second, time % 1000);
 	}
 	
 	/**
 	 * Handles networking with Nodes
 	 *
 	 */
-	private static class NodeHandler implements Runnable {
-		private final int start;
-		private final int end;
-		private final int size;
-		private final Socket s;
+	private static class Node implements Runnable {
+		private int start;
+		private int end;
+		private int size;
+		private final Socket socket;
 		
 		private double[][] OUTPUT;
-		public NodeHandler(Socket s, int start, int end) {
-			this.s = s;
-			this.end = end;
-			this.start = start;
+		
+		public Node(Socket s) {
+			this.socket = s;
+		}
+		
+		public void initialize(int s, int e) {
+			start = s;
+			end = e;
 			size = end - start;
 		}
 		
@@ -319,8 +321,8 @@ public class Networking {
 		public void run() {
 			try {
 				//System.out.println("Sending " + size + " files to " + s.getRemoteSocketAddress());
-				DataOutputStream os = new DataOutputStream(s.getOutputStream());
-				DataInputStream is = new DataInputStream(s.getInputStream());
+				DataOutputStream os = new DataOutputStream(socket.getOutputStream());
+				DataInputStream is = new DataInputStream(socket.getInputStream());
 				
 				//Send size
 				os.writeInt(size);
@@ -349,24 +351,25 @@ public class Networking {
 			
 				//Done
 			} catch (IOException e) {
-				System.err.println("Error on socket with " + s.getRemoteSocketAddress());
+				System.err.println("Error on socket with " + socket.getRemoteSocketAddress());
 			}
 		}
 	}
 	
 	/**
-	 * Listens for incomming Node connections
+	 * Listens for incoming Node connections
 	 *
 	 */
-	private static class Listener implements Runnable{
+	private static class NodeHandler implements Runnable{
 		private final int port;
-		private ArrayList<Socket> nodes;
 		private boolean run = true;
-		ServerSocket serverSocket;
+		private ServerSocket serverSocket;
+		private List<Node> nodes;
+		private Thread thread;
 		
-		public Listener(int p) {
+		public NodeHandler(int p) {
 			port = p;
-			nodes = new ArrayList<Socket>();
+			nodes = new ArrayList<Node>();
 		}
 		
 		@Override
@@ -380,7 +383,7 @@ public class Networking {
 				while (run) {
 					try {
 						Socket nodeSocket = serverSocket.accept();
-						nodes.add(nodeSocket);
+						nodes.add(new Node(nodeSocket));
 						System.out.println(nodeSocket.getRemoteSocketAddress() + " added to nodes. Total nodes: " + nodes.size());
 					} catch (IOException e) {}
 				}
@@ -389,23 +392,46 @@ public class Networking {
 		}
 		
 		/**
+		 * Begins listening for nodes, and waits until
+		 * @param numNodes
+		 */
+		public void gatherNodes(int numNodes) {
+			start();
+			while (nodes.size() < numNodes) {
+				try{ Thread.sleep(1000); } catch (Exception e) {}
+			}
+			stop();
+		}
+		
+		/**
+		 * Start listening for node connections
+		 */
+		public void start() {
+			if (thread == null || !thread.isAlive()) {
+				thread = new Thread(this);
+				thread.start();
+			}
+		}
+		
+		/**
 		 * Stop listening
 		 */
 		public void stop() {
-			run = false;
 			try {
+				run = false;
 				serverSocket.close();
-			} catch (IOException e) {}
+				thread.join();
+			} catch (Exception e) {}
 		}
 		
 		/**
 		 * Send a heartbeat message (0) to all nodes. Remove closed connections.
 		 */
-		public void heartbeat() {
+		private void heartbeat() {
 			synchronized (nodes) {
 				if (nodes.size() > 0) {
 					for (int i = 0; i < nodes.size(); i++) {
-						Socket s = nodes.get(i);
+						Socket s = nodes.get(i).socket;
 						try {
 							new DataOutputStream(s.getOutputStream()).writeInt(0);
 						} catch (Exception e) {
@@ -416,13 +442,50 @@ public class Networking {
 				}
 			}
 		}
+		
 		/**
 		 * Get the list of all connected nodes.
-		 * @return Nodes
+		 * @return NodeHandlers
 		 */
-		public ArrayList<Socket> getNodes() {
+		public List<Node> getNodes() {
 			heartbeat();
 			return nodes;
+		}
+		
+		/**
+		 * Assigns each node a part of the data to be processed
+		 * @param size Size of the data
+		 */
+		public void assignTask(int size) {
+			int framesPerNode = (int)Math.ceil(size / (double)nodes.size());
+			int f = 0;
+			for (Node node : nodes) {
+				node.initialize(f, f + framesPerNode);
+				
+				f += framesPerNode;
+				if (f + framesPerNode > size) {
+					framesPerNode -= (f + framesPerNode - size);
+				}
+			}
+		}
+		
+		/**
+		 * Starts distributing workload to nodes, optionally waits for their response.
+		 * @param threads
+		 * @param wait
+		 */
+		public void startTask(int threads, boolean wait) {
+			ExecutorService executor = Executors.newFixedThreadPool(threads);
+			for (Node node : nodes) {
+				executor.submit(node);
+			}
+			executor.shutdown();
+			
+			if (wait) {
+				while (!executor.isTerminated()) {
+					try{ Thread.sleep(1000); } catch (Exception e) {}
+				}
+			}
 		}
 	}
 	/**
