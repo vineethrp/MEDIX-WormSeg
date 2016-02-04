@@ -72,6 +72,7 @@ public class FeatureExtractor implements Runnable {
 	 * @param frame
 	 * @throws IOException
 	 */
+	@SuppressWarnings("unused")
 	private static void drawThreshold(boolean[][] image, int x, int y, int frame) throws IOException {
         int w = image.length;
         int h = image[0].length;
@@ -98,6 +99,7 @@ public class FeatureExtractor implements Runnable {
 	 * @param frame
 	 * @throws IOException
 	 */
+	@SuppressWarnings("unused")
 	private static void drawGrayscale(int[] image, int w, int h, int frame) throws IOException {
 		BufferedImage draw = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
 		Graphics g = draw.getGraphics();
