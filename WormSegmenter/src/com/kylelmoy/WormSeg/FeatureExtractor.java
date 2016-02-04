@@ -118,7 +118,6 @@ public class FeatureExtractor implements Runnable {
 	}
 	
 	public void run() {
-		//System.out.println("Running!");
 		int segmentationErrorCount = 0;
 		int offset = (SEARCH_WINDOW_SIZE / 2);
 		Integer lastx = null;
@@ -164,9 +163,6 @@ public class FeatureExtractor implements Runnable {
 				offy = lasty - offset;
 				if (offx < 0) offx = 0;
 				if (offy < 0) offy = 0;
-
-				//Draw threshold to image, for debug purposes
-				//drawThreshold(thresh, offx, offy, index);
 				
 				//Attempt to find the largest component
 				//If this fails, an exception is thrown, skip to CATCH
