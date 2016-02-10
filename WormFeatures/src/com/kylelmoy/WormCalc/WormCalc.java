@@ -11,6 +11,11 @@ import dataObjects.GlobalCentroids;
 import dataObjects.MovementFeatures;
 import dataObjects.TrackerLog;
 
+/**
+ * Calculates movement features from tracker and segmentation output
+ * @author Kyle Moy
+ *
+ */
 public class WormCalc {
 	public static void main(String[] args) throws Exception {
 		TrackerLog trackerLog = new TrackerLog(args[0]);
