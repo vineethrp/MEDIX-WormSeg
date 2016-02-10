@@ -1,0 +1,27 @@
+\documentclass[]{article}
+\usepackage{listings}
+
+%opening
+\title{Worm Calc User Guide}
+\author{Kyle Moy}
+
+\begin{document}
+
+\maketitle
+
+\section{Usage}
+The WormCalc takes 4 parameters in this order, separated by spaces:
+
+\begin{enumerate}
+	\item Input path to the tracker log ("log/log.dat", or "log/tracker.log" if from the old tracker)
+	\item Input path to the data from the segmentation software ("log/features.log")
+	\item Output path to where movement feature data will be written
+	\item Output path to where cell occupancy data will be written
+\end{enumerate}
+
+\section{Example}
+\begin{lstlisting}[language=command.com, breaklines=true, caption=Arbitrary Input Output Paths]
+java -jar WormCalc.jar C:/log.dat C:/features.log C:/movementFeatures.csv C:/cellOccupancy.csv
+\end{lstlisting}
+
+\end{document}

@@ -18,6 +18,10 @@ import com.kylelmoy.dataObjects.TrackerLog;
  */
 public class WormCalc {
 	public static void main(String[] args) throws Exception {
+		if (args.length < 4) {
+			System.out.println("Usage: [tracker log path] [centroid log path] [output feature path] [output occupancy path]");
+			return;
+		}
 		TrackerLog trackerLog = new TrackerLog(args[0]);
 		CentroidLog centroidLog = new CentroidLog(args[1]);
 		
