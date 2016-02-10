@@ -5,11 +5,11 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
-import dataObjects.CellOccupancy;
-import dataObjects.CentroidLog;
-import dataObjects.GlobalCentroids;
-import dataObjects.MovementFeatures;
-import dataObjects.TrackerLog;
+import com.kylelmoy.dataObjects.CellOccupancy;
+import com.kylelmoy.dataObjects.CentroidLog;
+import com.kylelmoy.dataObjects.GlobalCentroids;
+import com.kylelmoy.dataObjects.MovementFeatures;
+import com.kylelmoy.dataObjects.TrackerLog;
 
 /**
  * Calculates movement features from tracker and segmentation output

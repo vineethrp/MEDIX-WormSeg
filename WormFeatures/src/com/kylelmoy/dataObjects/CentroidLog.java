@@ -1,4 +1,4 @@
-package dataObjects;
+package com.kylelmoy.dataObjects;
 
 import java.io.File;
 import java.io.FileNotFoundException;
