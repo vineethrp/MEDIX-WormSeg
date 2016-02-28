@@ -297,10 +297,9 @@ public class FeatureExtractor implements Runnable {
 			 * Java byte primitive is signed, whereas the values
 			 * we're reading are unsigned. We will store the image
 			 * as an int[] array to preserve positive values above
-			 * 127. We add 127 to offset the signed values into positive
-			 * space.
+			 * 127. 
 			 */
-			gray[i] = src[i*3] + 127;
+			gray[i] = src[i*3] & 0xFF;
 		}
 		
 		/* For DataBufferInt
