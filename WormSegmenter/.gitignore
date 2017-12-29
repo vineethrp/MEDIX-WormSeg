@@ -3,3 +3,6 @@
 /host.bat
 /node.bat
 /debug/
+deliverable/out*
+src/com/kylelmoy/WormSeg/*.class
+src/WormSeg.jar
