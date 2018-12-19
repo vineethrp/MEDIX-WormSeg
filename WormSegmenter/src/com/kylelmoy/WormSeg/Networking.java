@@ -82,7 +82,7 @@ public class Networking {
 				value = "";
 				i--;
 			} else {
-				value = args[i+1].toLowerCase();
+				value = args[i+1];
 			}
 			config.put(key, value);
 			System.out.println("\t" + args[i].replace("-", "") + ": " + args[i+1].toLowerCase());
